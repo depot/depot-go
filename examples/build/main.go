@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/containerd/console"
-	"github.com/depot/depot-go/pkg/build"
-	"github.com/depot/depot-go/pkg/machine"
+	"github.com/depot/depot-go/build"
+	"github.com/depot/depot-go/machine"
 	cliv1 "github.com/depot/depot-go/proto/depot/cli/v1"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/client/llb"

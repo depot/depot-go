@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/depot/depot-go/pkg/api"
+	"github.com/depot/depot-go/api"
 	cliv1 "github.com/depot/depot-go/proto/depot/cli/v1"
 	"github.com/depot/depot-go/proto/depot/cli/v1/cliv1connect"
 	"github.com/moby/buildkit/client"

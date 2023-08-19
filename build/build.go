@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/bufbuild/connect-go"
-	depotapi "github.com/depot/depot-go/pkg/api"
+	depotapi "github.com/depot/depot-go/api"
 	cliv1 "github.com/depot/depot-go/proto/depot/cli/v1"
 	"github.com/moby/buildkit/util/grpcerrors"
 	"google.golang.org/grpc/codes"
