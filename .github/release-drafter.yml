@@ -1,0 +1,6 @@
+name-template: Depot CLI $RESOLVED_VERSION
+tag-template: v$RESOLVED_VERSION
+template: |
+  ## What's Changed
+
+  $CHANGES

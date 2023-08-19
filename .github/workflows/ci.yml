@@ -1,0 +1,57 @@
+name: ci
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20.5"
+          check-latest: true
+          cache: true
+      - name: Verify dependencies
+        run: |
+          go mod verify
+          go mod download
+      - name: Check formatting
+        run: |
+          STATUS=0
+          assert-nothing-changed() {
+            local diff
+            "$@" >/dev/null || return 1
+            if ! diff="$(git diff -U1 --color --exit-code)"; then
+              printf '\e[31mError: running `\e[1m%s\e[22m` results in modifications that you must check into version control:\e[0m\n%s\n\n' "$*" "$diff" >&2
+              git checkout -- .
+              STATUS=1
+            fi
+          }
+          assert-nothing-changed go fmt ./...
+          assert-nothing-changed go mod tidy
+          exit $STATUS
+
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.53.3
+          only-new-issues: false
+          skip-cache: false
+          skip-build-cache: true
+          skip-pkg-cache: true
+          args: --timeout 5m
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    runs-on: ubuntu-latest-16-cores
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20.5"
+          check-latest: true
+          cache: true
+      - run: go build -o bin/example ./examples/build
