@@ -50,14 +50,9 @@ func Acquire(ctx context.Context, buildID, token, platform string) (*Machine, er
 		}
 	}()
 
-	var builderPlatform cliv1.BuilderPlatform
-	switch m.Platform {
-	case "amd64":
-		builderPlatform = cliv1.BuilderPlatform_BUILDER_PLATFORM_AMD64
-	case "arm64":
+	builderPlatform := cliv1.BuilderPlatform_BUILDER_PLATFORM_AMD64
+	if strings.Contains(m.Platform, "arm") {
 		builderPlatform = cliv1.BuilderPlatform_BUILDER_PLATFORM_ARM64
-	default:
-		return nil, errors.Errorf("unsupported platform: %s", m.Platform)
 	}
 
 	client := api.NewBuildClient()
