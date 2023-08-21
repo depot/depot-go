@@ -51,7 +51,7 @@ func Acquire(ctx context.Context, buildID, token, platform string) (*Machine, er
 	}()
 
 	builderPlatform := cliv1.BuilderPlatform_BUILDER_PLATFORM_AMD64
-	if strings.Contains(m.Platform, "arm") {
+	if strings.Contains(m.Platform, "arm") || strings.Contains(m.Platform, "aarch") {
 		builderPlatform = cliv1.BuilderPlatform_BUILDER_PLATFORM_ARM64
 	}
 
