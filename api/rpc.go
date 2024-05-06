@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/depot/depot-go/proto/depot/cli/v1/cliv1connect"
 )
 

@@ -2,19 +2,13 @@ package api
 
 import (
 	"context"
-	"fmt"
-	"runtime"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
+	"github.com/depot/depot-go/internal/useragent"
 )
 
-// Returns the user agent string for the CLI.
-func Agent() string {
-	return fmt.Sprintf("github.com/depot/depot-go/%s/%s", runtime.GOOS, runtime.GOARCH)
-}
-
 func WithUserAgent() connect.ClientOption {
-	return connect.WithInterceptors(&agentInterceptor{Agent()})
+	return connect.WithInterceptors(&agentInterceptor{useragent.Agent()})
 }
 
 type agentInterceptor struct {

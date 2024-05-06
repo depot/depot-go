@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/containerd/console"
 	"github.com/depot/depot-go/build"
 	"github.com/depot/depot-go/machine"
 	cliv1 "github.com/depot/depot-go/proto/depot/cli/v1"
@@ -93,12 +92,12 @@ func buildImage(ctx context.Context, buildkitClient *client.Client) error {
 	})
 
 	eg.Go(func() error {
-		var c console.Console
-		if cn, err := console.ConsoleFromFile(os.Stderr); err == nil {
-			c = cn
+		display, err := progressui.NewDisplay(os.Stdout, progressui.AutoMode)
+		if err != nil {
+			return err
 		}
-		// not using shared context to not disrupt display but let is finish reporting errors
-		_, err = progressui.DisplaySolveStatus(context.TODO(), c, os.Stdout, ch)
+
+		_, err = display.UpdateFrom(context.TODO(), ch)
 		return err
 	})
 
