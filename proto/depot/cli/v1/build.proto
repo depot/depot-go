@@ -33,12 +33,18 @@ message BuildOptions {
 
   // Linting was requested.
   bool lint = 7;
+  // Save to depot registry.
+  bool save = 8;
 }
 
 enum Command {
   COMMAND_UNSPECIFIED = 0;
   COMMAND_BUILD = 1;
   COMMAND_BAKE = 2;
+  COMMAND_BUILDX = 3;
+  COMMAND_DAGGER = 4;
+  COMMAND_EXEC = 5;
+  COMMAND_FLYCTL = 6;
 }
 
 message BuildOutput {
@@ -60,6 +66,20 @@ message CreateBuildResponse {
 
   // Build URL is the URL to the build output.
   string build_url = 5;
+
+  string project_id = 6;
+
+  repeated Credential additional_credentials = 7;
+  message Credential {
+    string host = 1;
+    string token = 2;
+  }
+
+  repeated Tag additional_tags = 8;
+  message Tag {
+    string tag = 1;
+    bool push = 2;
+  }
 }
 
 message Registry {
@@ -112,6 +132,13 @@ message GetBuildKitConnectionResponse {
     string server_name = 2;
     Cert cert = 3;
     Cert ca_cert = 4;
+    oneof compressor {
+      Identity identity = 5;
+      Gzip gzip = 6;
+    }
+
+    message Identity {}
+    message Gzip {}
   }
 }
 
