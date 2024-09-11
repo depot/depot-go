@@ -18,6 +18,18 @@ message CreateBuildRequest {
   string project_id = 1;
   // This is an option per build target; in other words many for bake and one for build.
   repeated BuildOptions options = 2;
+  optional RequiredEngine required_engine = 3;
+  message RequiredEngine {
+    oneof engine {
+      BuildKitEngine buildkit = 1;
+      DaggerEngine dagger = 2;
+    }
+
+    message BuildKitEngine {}
+    message DaggerEngine {
+      string version = 1;
+    }
+  }
 }
 
 message BuildOptions {
