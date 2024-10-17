@@ -32,10 +32,35 @@ type Machine struct {
 	reportHealthDone chan struct{}
 }
 
+type EngineKind int
+
+const (
+	EngineKindBuildkit EngineKind = iota
+	EngineKindDagger
+)
+
 // Platform can be "amd64" or "arm64".
 // This reports health continually to the Depot API and waits for the buildkit
-// machine to be ready.  This can be canceled by canceling the context.
+// machine and engine to be ready.  This can be canceled by canceling the context.
 func Acquire(ctx context.Context, buildID, token, platform string) (*Machine, error) {
+	return AcquireMachineEngine(ctx, buildID, token, platform, EngineKindBuildkit, "")
+}
+
+// Platform can be "amd64" or "arm64".
+// This reports health continually to the Depot API and waits for the buildkit
+// machine and engine to be ready.  This can be canceled by canceling the context.
+func AcquireBuildkit(ctx context.Context, buildID, token, platform string) (*Machine, error) {
+	return AcquireMachineEngine(ctx, buildID, token, platform, EngineKindBuildkit, "")
+}
+
+// Platform can be "amd64" or "arm64".
+// This reports health continually to the Depot API and waits for the machine with the dagger version to be ready.
+// This can be canceled by canceling the context.
+func AcquireDagger(ctx context.Context, buildID, token, platform, engineVersion string) (*Machine, error) {
+	return AcquireMachineEngine(ctx, buildID, token, platform, EngineKindDagger, engineVersion)
+}
+
+func AcquireMachineEngine(ctx context.Context, buildID, token, platform string, engineKind EngineKind, engineVersion string) (*Machine, error) {
 	m := &Machine{
 		BuildID:          buildID,
 		Token:            token,
@@ -56,12 +81,26 @@ func Acquire(ctx context.Context, buildID, token, platform string) (*Machine, er
 	}
 
 	client := api.NewBuildClient()
+	req := cliv1.GetBuildKitConnectionRequest{
+		BuildId:  m.BuildID,
+		Platform: builderPlatform,
+	}
+	switch engineKind {
+	case EngineKindBuildkit:
+		req.RequiredEngine = &cliv1.GetBuildKitConnectionRequest_RequiredEngine{
+			Engine: &cliv1.GetBuildKitConnectionRequest_RequiredEngine_Buildkit{
+				Buildkit: &cliv1.GetBuildKitConnectionRequest_RequiredEngine_BuildKitEngine{},
+			},
+		}
+	case EngineKindDagger:
+		req.RequiredEngine = &cliv1.GetBuildKitConnectionRequest_RequiredEngine{
+			Engine: &cliv1.GetBuildKitConnectionRequest_RequiredEngine_Dagger{
+				Dagger: &cliv1.GetBuildKitConnectionRequest_RequiredEngine_DaggerEngine{Version: engineVersion},
+			},
+		}
+	}
 
 	for {
-		req := cliv1.GetBuildKitConnectionRequest{
-			BuildId:  m.BuildID,
-			Platform: builderPlatform,
-		}
 		resp, err := client.GetBuildKitConnection(ctx, api.WithAuthentication(connect.NewRequest(&req), m.Token))
 		if err != nil {
 			return nil, err
