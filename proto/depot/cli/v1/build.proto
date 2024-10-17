@@ -115,6 +115,19 @@ enum BuilderPlatform {
 message GetBuildKitConnectionRequest {
   string build_id = 1;
   BuilderPlatform platform = 2;
+  optional RequiredEngine required_engine = 3;
+
+  message RequiredEngine {
+    oneof engine {
+      BuildKitEngine buildkit = 1;
+      DaggerEngine dagger = 2;
+    }
+
+    message BuildKitEngine {}
+    message DaggerEngine {
+      string version = 1;
+    }
+  }
 }
 
 message GetBuildKitConnectionResponse {
@@ -152,7 +165,10 @@ message ReportBuildHealthRequest {
   BuilderPlatform platform = 2;
 }
 
-message ReportBuildHealthResponse {}
+message ReportBuildHealthResponse {
+  // Cancel the build after this time.
+  google.protobuf.Timestamp cancels_at = 1;
+}
 
 message ReportTimingsRequest {
   string build_id = 1;
