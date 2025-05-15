@@ -1,6 +1,6 @@
 module github.com/depot/depot-go/examples
 
-go 1.22
+go 1.24
 
 require (
 	github.com/depot/depot-go v0.0.0-dev

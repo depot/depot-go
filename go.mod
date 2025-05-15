@@ -1,6 +1,6 @@
 module github.com/depot/depot-go
 
-go 1.22
+go 1.24
 
 require (
 	connectrpc.com/connect v1.16.1

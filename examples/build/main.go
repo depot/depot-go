@@ -12,7 +12,10 @@ import (
 	cliv1 "github.com/depot/depot-go/proto/depot/cli/v1"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/client/llb"
+	gateway "github.com/moby/buildkit/frontend/gateway/client"
+	"github.com/moby/buildkit/solver/pb"
 	"github.com/moby/buildkit/util/progress/progressui"
+	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -113,4 +116,57 @@ func buildImage(ctx context.Context, buildkitClient *client.Client) error {
 		log.Printf("exporter response: %v %v\n", k, string(v))
 	}
 	return nil
+}
+
+func RunImage(ctx context.Context, imageName string, args []string, c *client.Client, platform ocispecs.Platform, filename string, fileContent []byte) error {
+	buildCallback := func(ctx context.Context, c gateway.Client) (*gateway.Result, error) {
+		image := llb.Image(imageName).
+			Platform(platform).
+			File(
+				llb.Mkfile(filename, 0664, fileContent),
+				llb.WithCustomName("[internal] lint"),
+			)
+
+		def, err := image.Marshal(ctx, llb.Platform(platform))
+		if err != nil {
+			return nil, err
+		}
+		imgRef, err := c.Solve(ctx, gateway.SolveRequest{
+			Definition: def.ToPB(),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		containerCtx, containerCancel := context.WithCancel(ctx)
+		defer containerCancel()
+		bkContainer, err := c.NewContainer(containerCtx, gateway.NewContainerRequest{
+			Mounts: []gateway.Mount{
+				{
+					Dest:      "/",
+					MountType: pb.MountType_BIND,
+					Ref:       imgRef.Ref,
+				},
+			},
+			Platform: &pb.Platform{Architecture: platform.Architecture, OS: platform.OS},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		proc, err := bkContainer.Start(ctx, gateway.StartRequest{
+			Args:   args,
+			Stdout: os.Stdout,
+		})
+		if err != nil {
+			_ = bkContainer.Release(ctx)
+			return nil, err
+		}
+		_ = proc.Wait()
+
+		return nil, bkContainer.Release(ctx)
+	}
+	_, err := c.Build(ctx, client.SolveOpt{}, "buildx", buildCallback, nil)
+
+	return err
 }
