@@ -189,7 +189,7 @@ func (m *Machine) Client(ctx context.Context) (*client.Client, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create temp file")
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		err = os.WriteFile(file.Name(), []byte(m.Cert), 0600)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to write cert to temp file")
@@ -200,7 +200,7 @@ func (m *Machine) Client(ctx context.Context) (*client.Client, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create temp file")
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		err = os.WriteFile(file.Name(), []byte(m.Key), 0600)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to write key to temp file")
@@ -211,7 +211,7 @@ func (m *Machine) Client(ctx context.Context) (*client.Client, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create temp file")
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		err = os.WriteFile(file.Name(), []byte(m.CACert), 0600)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to write CA cert to temp file")

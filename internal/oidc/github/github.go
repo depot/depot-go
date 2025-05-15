@@ -44,7 +44,7 @@ func (p *GitHubOIDCProvider) RetrieveToken(ctx context.Context) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var payload struct {
 		Value string `json:"value"`

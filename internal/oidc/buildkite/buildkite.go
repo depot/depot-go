@@ -23,7 +23,7 @@ func (p *BuildkiteOIDCProvider) Name() string {
 func (p *BuildkiteOIDCProvider) RetrieveToken(ctx context.Context) (string, error) {
 	agentToken := os.Getenv("BUILDKITE_AGENT_ACCESS_TOKEN")
 	if agentToken == "" {
-		return "", fmt.Errorf("Not running in a Buildkite agent environment")
+		return "", fmt.Errorf("not running in a Buildkite agent environment")
 	}
 
 	endpoint := os.Getenv("BUILDKITE_AGENT_ENDPOINT")

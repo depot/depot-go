@@ -22,7 +22,7 @@ type authenticatedTransport struct {
 // RoundTrip invoked each time a request is made
 func (t authenticatedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if t.Token == "" {
-		return nil, fmt.Errorf("Invalid token, empty string supplied")
+		return nil, fmt.Errorf("invalid token, empty string supplied")
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Token %s", t.Token))

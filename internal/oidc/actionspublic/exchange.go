@@ -74,7 +74,7 @@ func RetrieveToken(ctx context.Context, audience string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		errorResponse := &ErrorResponse{}
@@ -115,7 +115,7 @@ func RetrieveToken(ctx context.Context, audience string) (string, error) {
 		if err != nil {
 			continue
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode == 200 {
 			tokenBytes, err := io.ReadAll(resp.Body)

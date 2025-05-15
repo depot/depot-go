@@ -65,7 +65,7 @@ func TestProvider(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Clearenv()
 			for k, v := range tt.env {
-				os.Setenv(k, v)
+				_ = os.Setenv(k, v)
 			}
 
 			if _, got := Provider(); got != tt.want {
