@@ -178,7 +178,7 @@ func (c *Client) doRequest(req *http.Request, v any) (*Response, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	defer func() {
 		_, _ = io.Copy(io.Discard, resp.Body)
 	}()
@@ -197,7 +197,7 @@ func (c *Client) doRequest(req *http.Request, v any) (*Response, error) {
 			_, _ = io.Copy(w, resp.Body)
 		} else {
 			if strings.Contains(req.Header.Get("Content-Type"), "application/msgpack") {
-				err = errors.New("Msgpack not supported")
+				err = errors.New("msgpack not supported")
 			} else {
 				err = json.NewDecoder(resp.Body).Decode(v)
 			}
