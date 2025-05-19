@@ -75,7 +75,9 @@ func buildImage(ctx context.Context, buildkitClient *client.Client) error {
 	ch := make(chan *client.SolveStatus)
 	eg, ctx := errgroup.WithContext(ctx)
 
-	ops := llb.Image("alpine:latest")
+	ops := llb.
+		Image("ubuntu:24.04").       // Like FROM
+		Run(llb.Shlex("apt update")) // Like RUN
 	def, err := ops.Marshal(ctx, llb.LinuxAmd64)
 	if err != nil {
 		return err
