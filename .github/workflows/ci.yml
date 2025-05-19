@@ -52,4 +52,7 @@ jobs:
           go-version: "1.24"
           check-latest: true
           cache: true
-      - run: go build -o bin/example ./examples/build
+      - name: Build examples
+        run: |
+          go build -o bin/llb ./examples/low-level-build-ops
+          go build -o bin/simple ./examples/simple
