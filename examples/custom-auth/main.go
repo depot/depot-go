@@ -5,18 +5,15 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/depot/depot-go/build"
 	"github.com/depot/depot-go/machine"
 	cliv1 "github.com/depot/depot-go/proto/depot/cli/v1"
 	"github.com/moby/buildkit/client"
+	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/session"
-	"github.com/moby/buildkit/session/auth"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/moby/buildkit/session/upload/uploadprovider"
 )
 
 func main() {
@@ -27,10 +24,17 @@ func main() {
 	token := os.Getenv("DEPOT_TOKEN")
 	project := os.Getenv("DEPOT_PROJECT_ID")
 
-	// ... and set these variables.
-	dockerfilePath := "./Dockerfile"
-	workingDir := "."
-	imageTag := "AWS_ACCOUNT_ID_HERE.dkr.ecr.us-east-1.amazonaws.com/REPO_HERE:TAG_HERE"
+	/*
+	 *
+	 * howdy.tar.gz is a compressed tar archive that contains the Dockerfile and
+	 * any other files needed to build the image.
+	 *
+	 */
+	r, err := os.Open("howdy.tar.gz")
+	if err != nil {
+		log.Printf("unable to open file: %v", err)
+		return
+	}
 
 	// 1. Register a new build.  This returns back an id and a temporary build token.
 	req := &cliv1.CreateBuildRequest{
@@ -62,28 +66,27 @@ func main() {
 		return
 	}
 
+	uploader := uploadprovider.New()
+	// Special buildkit URL for HTTP over gRPC over gRPC.
+	contextURL := uploader.Add(r)
+
+	echo := llb.Scratch().File(llb.Copy(llb.Local("."), "/", "/"))
+
+	// TODO: right context?
+	def, err := echo.Marshal(connectCtx)
+	if err != nil {
+		log.Printf("unable to marshal LLB definition: %v", err)
+		return
+	}
+
 	solverOptions := client.SolveOpt{
 		Frontend: "dockerfile.v0", // Interpret the build as a Dockerfile.
 		FrontendAttrs: map[string]string{
-			"filename": filepath.Base(dockerfilePath),
 			"platform": "linux/arm64", // Build for arm64 architecture.
-		},
-		LocalDirs: map[string]string{
-			"dockerfile": filepath.Dir(dockerfilePath),
-			"context":    workingDir,
-		},
-		Exports: []client.ExportEntry{
-			{
-				Type: "image",
-				Attrs: map[string]string{
-					"oci-mediatypes": "true",
-					"push":           "true",   // Push the image to the registry...
-					"name":           imageTag, // ... with this tag.
-				},
-			},
+			"context":  contextURL,
 		},
 		Session: []session.Attachable{
-			&EnvAuth{},
+			uploader,
 		},
 	}
 
@@ -98,53 +101,8 @@ func main() {
 	}()
 
 	// 4. Build and push the image.
-	_, buildErr = buildkitClient.Solve(ctx, nil, solverOptions, buildStatusCh)
+	_, buildErr = buildkitClient.Solve(ctx, def, solverOptions, buildStatusCh)
 	if buildErr != nil {
 		return
 	}
-}
-
-// EnvAuth is a custom auth provider that uses environment variables to provide registry credentials.
-// Uses REGISTRY_USERNAME and REGISTRY_TOKEN environment variables.
-type EnvAuth struct{}
-
-// In BuildKit an Attachable is a client-side gRPC server that the build server can connect to.
-// BuildKit tunnels gRPC over gRPC, so the client-side can be dialed by the server-side.
-var _ session.Attachable = (*EnvAuth)(nil)
-
-// Register hosts an AuthServer on the client-side for the build server.
-func (ap *EnvAuth) Register(server *grpc.Server) {
-	auth.RegisterAuthServer(server, ap)
-}
-
-// AuthServer is not documented in BuildKit, but these are functions called by the build server.
-var _ auth.AuthServer = (*EnvAuth)(nil)
-
-// For AWS ECR username is `AWS` and for password run `aws ecr get-login-password --region YOUR_REGION`.
-func (ap *EnvAuth) Credentials(ctx context.Context, req *auth.CredentialsRequest) (*auth.CredentialsResponse, error) {
-	// If base image is at docker return empty creds to use public download.
-	if req.Host == "registry-1.docker.io" {
-		return &auth.CredentialsResponse{}, nil
-	}
-
-	username := os.Getenv("REGISTRY_USERNAME")
-	registryPassword := os.Getenv("REGISTRY_PASSWORD")
-
-	return &auth.CredentialsResponse{
-		Username: username,
-		Secret:   registryPassword,
-	}, nil
-}
-
-// GetTokenAuthority needs to return an Unimplemented or a nil public key in order for the Credentials function to be called.
-func (ap *EnvAuth) GetTokenAuthority(ctx context.Context, req *auth.GetTokenAuthorityRequest) (*auth.GetTokenAuthorityResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
-}
-
-func (ap *EnvAuth) VerifyTokenAuthority(ctx context.Context, req *auth.VerifyTokenAuthorityRequest) (*auth.VerifyTokenAuthorityResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
-}
-
-func (ap *EnvAuth) FetchToken(ctx context.Context, req *auth.FetchTokenRequest) (rr *auth.FetchTokenResponse, err error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
 }
