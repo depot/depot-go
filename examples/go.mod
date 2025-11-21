@@ -1,13 +1,14 @@
 module github.com/depot/depot-go/examples
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/depot/depot-go v0.0.0-dev
 	github.com/docker/cli v25.0.3+incompatible
 	github.com/moby/buildkit v0.13.2
 	github.com/opencontainers/image-spec v1.1.0
-	golang.org/x/sync v0.12.0
+	golang.org/x/sync v0.18.0
+	google.golang.org/grpc v1.63.2
 )
 
 require (
@@ -63,15 +64,14 @@ require (
 	go.opentelemetry.io/otel/sdk v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240429193739-8cf5692501f6 // indirect
-	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )
