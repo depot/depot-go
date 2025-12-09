@@ -12,6 +12,7 @@ service BuildService {
   rpc ReportTimings(ReportTimingsRequest) returns (ReportTimingsResponse);
   rpc ReportBuildContext(ReportBuildContextRequest) returns (ReportBuildContextResponse);
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse) {}
+  rpc GetPullToken(GetPullTokenRequest) returns (GetPullTokenResponse);
 }
 
 message CreateBuildRequest {
@@ -237,3 +238,10 @@ message Dockerfile {
 }
 
 message ReportBuildContextResponse {}
+
+message GetPullTokenRequest {
+  optional string project_id = 1;
+  optional string build_id = 2;
+}
+
+message GetPullTokenResponse { string token = 1; }
