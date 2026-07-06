@@ -103,6 +103,7 @@ func AcquireMachineEngine(ctx context.Context, buildID, token, platform string, 
 	for {
 		resp, err := client.GetBuildKitConnection(ctx, api.WithAuthentication(connect.NewRequest(&req), m.Token))
 		if err != nil {
+			_ = m.Release()
 			return nil, err
 		}
 
