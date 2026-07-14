@@ -34,7 +34,7 @@ jobs:
           assert-nothing-changed go mod tidy
           exit $STATUS
 
-      - uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1
           only-new-issues: false
