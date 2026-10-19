@@ -1,0 +1,20 @@
+# Regenerate with: buf generate --template buf.gen.registry.yaml
+version: v2
+inputs:
+  - module: buf.build/depot/api:3a05aa40f3ba417c9e027bda2d5151f7
+    paths:
+      - depot/registry/v1beta1/registry.proto
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/depot/depot-go/proto
+  disable:
+    - module: buf.build/googleapis/googleapis
+plugins:
+  - remote: buf.build/protocolbuffers/go:v1.33.0
+    out: proto
+    opt: paths=source_relative
+  - remote: buf.build/connectrpc/go:v1.16.1
+    out: proto
+    opt: paths=source_relative

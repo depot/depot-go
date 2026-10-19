@@ -3,15 +3,17 @@ module github.com/depot/depot-go/examples
 go 1.24
 
 require (
+	connectrpc.com/connect v1.16.1
 	github.com/depot/depot-go v0.0.0-dev
 	github.com/docker/cli v25.0.3+incompatible
 	github.com/moby/buildkit v0.13.2
 	github.com/opencontainers/image-spec v1.1.0
 	golang.org/x/sync v0.12.0
+	google.golang.org/grpc v1.63.2
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
-	connectrpc.com/connect v1.16.1 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Microsoft/hcsshim v0.11.7 // indirect
@@ -71,8 +73,6 @@ require (
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240429193739-8cf5692501f6 // indirect
-	google.golang.org/grpc v1.63.2 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )
 
