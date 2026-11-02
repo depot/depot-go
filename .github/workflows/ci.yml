@@ -54,8 +54,11 @@ jobs:
           cache: true
       - name: Test SDK
         run: go test ./...
+      - name: Test examples
+        run: go test ./examples/...
       - name: Build examples
         run: |
           go build -o bin/llb ./examples/low-level-build-ops
           go build -o bin/simple ./examples/simple
           go build -o bin/registry-retention ./examples/registry-retention
+          go build -o bin/gitlab-trust-policy ./examples/gitlab-trust-policy

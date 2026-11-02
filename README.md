@@ -2,6 +2,78 @@
 
 See [examples](./examples) for usage.
 
+## Project OIDC trust policies
+
+`api.NewProjectClient()` exposes `ListTrustPolicies`, `AddTrustPolicy`,
+`UpdateTrustPolicy`, and `RemoveTrustPolicy` on the public Project API. Pass an
+**organization API token** with `api.WithAuthentication` on each request.
+Project tokens and read-only organization tokens cannot authorize these operations.
+
+```go
+client := api.NewProjectClient()
+resp, err := client.AddTrustPolicy(ctx, api.WithAuthentication(connect.NewRequest(&corev1.AddTrustPolicyRequest{
+    ProjectId: "your-depot-project-id",
+    Provider: &corev1.AddTrustPolicyRequest_Gitlab{Gitlab: &corev1.TrustPolicy_GitLab{
+        NamespaceId:       "12345",
+        ProjectId:         "67890",
+        ProtectedRefsOnly: true,
+    }},
+}), token))
+if err != nil {
+    return err
+}
+if resp.Msg.TrustPolicy == nil {
+    return fmt.Errorf("no trust policy returned")
+}
+// Inspect the saved settings: adding an existing policy preserves its restrictions.
+policy := resp.Msg.TrustPolicy
+_, err = client.UpdateTrustPolicy(ctx, api.WithAuthentication(connect.NewRequest(&corev1.UpdateTrustPolicyRequest{
+    ProjectId:         "your-depot-project-id",
+    TrustPolicyId:     policy.TrustPolicyId,
+    ProtectedRefsOnly: proto.Bool(false),
+}), token))
+if err != nil {
+    return err
+}
+```
+
+Import `corev1` from `github.com/depot/depot-go/proto/depot/core/v1`, `api` from
+`github.com/depot/depot-go/api`, `connect` from `connectrpc.com/connect`, and
+`proto` from `google.golang.org/protobuf/proto`.
+
+GitLab namespace and project IDs are numeric strings; the GitLab project ID is
+separate from the Depot project ID. `ProtectedRefsOnly: true` limits GitLab
+authentication to protected refs. New policies default to `false`. In an update,
+`nil` preserves the saved restriction; `proto.Bool(false)` explicitly disables it.
+GitHub's `AllowPublicPullRequests` update field has the same pointer semantics.
+Use each restriction only with its corresponding provider. CircleCI and Buildkite
+policies are also supported.
+
+`ListTrustPolicies` returns one page. When `NextPageToken` is present, pass it as
+`PageToken` with the same project and filter to continue. `RemoveTrustPolicy`
+revokes the specified policy using its `ProjectId` and `TrustPolicyId`.
+
+The [GitLab example](./examples/gitlab-trust-policy/main.go) performs one explicit
+operation per invocation and prints the saved policy, including false restrictions.
+From this checkout, set `DEPOT_TOKEN` and run:
+
+```bash
+go run ./examples/gitlab-trust-policy list <depot-project-id>
+go run ./examples/gitlab-trust-policy add <depot-project-id> <namespace-id> <gitlab-project-id> true
+go run ./examples/gitlab-trust-policy update <depot-project-id> <policy-id> false
+go run ./examples/gitlab-trust-policy remove <depot-project-id> <policy-id>
+```
+
+Pass the returned `nextPageToken` as the last argument to `list` for the next page.
+The client defaults to `https://api.depot.dev`; `DEPOT_API_URL` overrides it.
+Only point authenticated clients at endpoints you trust.
+
+Regenerate the Project bindings from the pinned public schema with:
+
+```bash
+buf generate --template buf.gen.project.yaml
+```
+
 ## Registry retention policies
 
 `api.NewRegistryClient()` exposes the public `depot.registry.v1beta1.RegistryService`,
