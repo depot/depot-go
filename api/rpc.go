@@ -40,6 +40,19 @@ func NewProjectClient() corev1connect.ProjectServiceClient {
 	return corev1connect.NewProjectServiceClient(http.DefaultClient, baseURL, WithUserAgent())
 }
 
+// NewBillingClient returns a client for finalized invoices and line items for
+// the organization's linked Stripe customer, including previous subscriptions
+// and standalone invoices. Authenticate requests with WithAuthentication and an
+// organization token, or an organization owner's user token with X-Depot-Org.
+// DEPOT_API_URL overrides the default API endpoint.
+func NewBillingClient() corev1connect.BillingServiceClient {
+	baseURL := os.Getenv("DEPOT_API_URL")
+	if baseURL == "" {
+		baseURL = "https://api.depot.dev"
+	}
+	return corev1connect.NewBillingServiceClient(http.DefaultClient, baseURL, WithUserAgent())
+}
+
 func WithAuthentication[T any](req *connect.Request[T], token string) *connect.Request[T] {
 	req.Header().Add("Authorization", "Bearer "+token)
 	return req
