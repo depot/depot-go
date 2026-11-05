@@ -137,39 +137,3 @@ PR contributions are welcome! The CLI codebase is evolving rapidly, but we are h
 ## License
 
 MIT License, see `LICENSE`
-
-## Finalized invoices
-
-`api.NewBillingClient()` exposes `ListInvoices`, `GetInvoice`, and
-`ListInvoiceLineItems`. Authenticate each request with `api.WithAuthentication`
-and an organization token. An organization owner's user token is also supported;
-set `X-Depot-Org` on each request to select the organization.
-
-The API includes finalized invoices for the linked Stripe customer across current,
-previous, and canceled subscriptions, plus standalone invoices (whose
-`SubscriptionId` is empty). Other Stripe customers, drafts, and upcoming estimates
-are excluded. Organizations sharing a Stripe customer share its invoice history.
-
-```go
-client := api.NewBillingClient()
-page, err := client.ListInvoices(ctx, api.WithAuthentication(connect.NewRequest(&corev1.ListInvoicesRequest{
-    PageSize: 100,
-}), token))
-if err != nil {
-    return err
-}
-for _, invoice := range page.Msg.Invoices {
-    // Amounts are signed int64 minor units; do not convert through float64.
-    fmt.Println(invoice.Id, invoice.Currency, invoice.Total)
-}
-// Pass page.Msg.NextPageToken in the next request until it is empty.
-// Even an empty page can have a continuation token when drafts were filtered.
-```
-
-`GetInvoice` takes an `InvoiceId`; `ListInvoiceLineItems` takes `InvoiceId`,
-`PageSize`, and `PageToken`, and returns its own `NextPageToken`. Page size is at
-most 100. Tokens are opaque and bound to the organization/customer and, for lines,
-the invoice. Hosted/PDF invoice links are confidential; avoid logging them.
-
-Billing bindings are generated from published Buf commit
-`2ae2cc96583940688aa4b20766844296` with `buf.gen.billing.yaml`.
